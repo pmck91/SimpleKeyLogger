@@ -1,0 +1,16 @@
+This keylogger was built purely as a learning experience and I am not responsible for any possible misuse. And I feel
+I should warn you, using this to spy on people is illegal, and could get you in a lot of trouble so don't do it!
+
+compiled with dev c++ just fine.
+
+The keylogger works by using windows hooks to capture keyboard input.
+It then outputs this to two files, a unicode + special chars file, and a Virtual_Key file
+which stores the virtual key codes. 
+
+This logger moves itself to system32 and adds a registry key to make it run on startup. This behaviour should
+be caught by any sensible antivirus and identified as spyware and rightfully so.
+
+This logger does nothing to transmit the recorded key strokes. The inclusion of such additional features would be pretty 
+irresponsible and could lead to nefarious uses, and I won't be responsible for such uses.
+
+PLEASE USE RESPONSIBLY!!!!
